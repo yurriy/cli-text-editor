@@ -16,19 +16,25 @@ short color_pair;
 wchar_t buf[2];
 int width;
 
+wchar_t get_cur_char() {
+    in_wch(&cc);
+    getcchar(&cc, cur, &attr, &color_pair, NULL);
+    fwprintf(l, L"got char %C (%d) pos %d\n", cur, cur, x);
+    return cur[0];
+}
+
 void go_end() {
     x = m - 1;
     move(y, x);
-    in_wch(&cc);
-    getcchar(&cc, cur, &attr, &color_pair, NULL);
     // Skip spaces.
-    while (iswspace(cur[0]) && x > 0) {
+    while (x > 0 && iswspace(get_cur_char())) {
         x--;
-        //fwprintf(l, L"moving %d %d\n", y, x);
         move(y, x);
-        in_wch(&cc);
-        getcchar(&cc, cur, &attr, &color_pair, NULL);
-        //fwprintf(l, L"got char %C (%d) pos %d\n", cur, cur, x);
+    }
+    // Stand after last non spacing char.
+    if (x != m - 1 && !iswspace(get_cur_char())) {
+        x++;
+        move(y, x);
     }
 }
 
@@ -78,13 +84,6 @@ int main(int argc, char* argv[]) {
             case KEY_END:
             {
                 go_end();
-                // Stand after last non spacing char.
-                if (x != m - 1) {
-                    x++;
-                }
-                //fwprintf(l, L"y %d x %d here\n", y, x);
-                move(y, x);
-                //fwprintf(l, L"moved.\n");
                 refresh();
                 break;
             }
@@ -93,7 +92,6 @@ int main(int argc, char* argv[]) {
             {
                 if (y > 0) y--;
                 go_end();
-                if (x != m - 1) x++;
                 refresh();
                 break;
             }
@@ -102,12 +100,11 @@ int main(int argc, char* argv[]) {
             {
                 if (y != n - 1) y++;
                 go_end();
-                if (x != m - 1) x++;
                 refresh();
                 break;
             }
 
-            case 13: // Enter
+            case '\r': // Enter
             {
                 if (y != n - 1) y++;
                 x = 0;
@@ -139,20 +136,11 @@ int main(int argc, char* argv[]) {
                 }
                 if (--x < 0) {
                     y--;
-                    x = m - 1;
+                    go_end();
+                } else {
                     move(y, x);
-                    in_wch(&cc);
-                    getcchar(&cc, cur, &attr, &color_pair, NULL);
-                    // Skip spaces.
-                    while (iswspace(cur[0]) && x > 0) {
-                        x--;
-                        move(y, x);
-                        in_wch(&cc);
-                        getcchar(&cc, cur, &attr, &color_pair, NULL);
-                    }
+                    delch();
                 }
-                move(y, x);
-                delch();
                 refresh();
                 break;
             }
@@ -166,18 +154,14 @@ int main(int argc, char* argv[]) {
 
             case 23: // ^W
             {
-                in_wch(&cc);
-                getcchar(&cc, cur, &attr, &color_pair, NULL);
                 // Skip spaces.
-                while (iswspace(cur[0]) && x > 0) {
+                while (iswspace(get_cur_char()) && x > 0) {
                     delch();
                     x--;
                     move(y, x);
-                    in_wch(&cc);
-                    getcchar(&cc, cur, &attr, &color_pair, NULL);
                 }
                 // Remove characters until space.
-                while (!iswspace(cur[0])) {
+                while (!iswspace(get_cur_char())) {
                     delch();
                     if (x > 0) {
                         x--;
@@ -185,13 +169,12 @@ int main(int argc, char* argv[]) {
                         break;
                     }
                     move(y, x);
-                    in_wch(&cc);
-                    getcchar(&cc, cur, &attr, &color_pair, NULL);
                 }
                 move(y, x);
                 refresh();
                 break;
             }
+
             default:
             {
                 if (res != KEY_CODE_YES) {
@@ -199,7 +182,6 @@ int main(int argc, char* argv[]) {
                     setcchar(&cc, buf, attr, 0, NULL);
                     ins_wch(&cc);
                     width = wcwidth(c);
-                    //fwprintf(l, L"width: %d\n", width);
                     x += width;
                     move(y, x);
                 }
