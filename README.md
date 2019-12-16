@@ -2,7 +2,7 @@
 
 ```
 cd contrib/ncurses-6.1
-./configure --prefix=$(pwd)/../ --enable-widec
+./configure --prefix=$(pwd)/../curses --enable-widec
 make
 make install
 ```
