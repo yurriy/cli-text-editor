@@ -1,6 +1,7 @@
 #include <ncursesw/curses.h>
 #include <locale.h>
 #include <wchar.h>
+#include <wctype.h>
 #include <stdlib.h>
 #include <string.h>
 
