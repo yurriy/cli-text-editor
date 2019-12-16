@@ -139,26 +139,26 @@ int main(int argc, char* argv[]) {
                 }
                 if (--x < 0) {
                     y--;
-                    //fwprintf(l, L"screen size %d %d\n", n, m);
                     x = m - 1;
-                    //fwprintf(l, L"moving %d %d\n", y, x);
                     move(y, x);
-                    //fwprintf(l, L"after move\n");
                     in_wch(&cc);
-                    //fwprintf(l, L"after in_wch\n");
                     getcchar(&cc, cur, &attr, &color_pair, NULL);
-                    //fwprintf(l, L"got char %C\n", cur);
                     // Skip spaces.
                     while (iswspace(cur[0]) && x > 0) {
                         x--;
-                        //fwprintf(l, L"moving %d %d\n", y, x);
                         move(y, x);
                         in_wch(&cc);
                         getcchar(&cc, cur, &attr, &color_pair, NULL);
-                        //fwprintf(l, L"got char %C (%d) pos %d\n", cur, cur, x);
                     }
                 }
                 move(y, x);
+                delch();
+                refresh();
+                break;
+            }
+
+            case KEY_DC:
+            {
                 delch();
                 refresh();
                 break;
